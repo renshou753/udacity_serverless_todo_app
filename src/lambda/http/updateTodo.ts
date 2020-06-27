@@ -2,18 +2,11 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 
-const s3 = new AWS.S3({
-  signatureVersion: 'v4'
-})
-
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todosTable = process.env.TODOS_TABLE
-const bucketName = process.env.IMAGES_S3_BUCKET
-const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Caller event', event)
-
+  console.log('Processing event: ', event)
   const todoId = event.pathParameters.todoId
   const validTodoId = await todoExists(todoId)
   
@@ -25,26 +18,36 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       })
     }
   }
+  
+  const parsedBody = JSON.parse(event.body)
+  
+  await docClient.update({
+    TableName: todosTable,
+    Key:{
+        todoId: todoId
+    },
+    UpdateExpression: 'set #ts = :r, dueDate=:p, done=:d',
+    ExpressionAttributeValues:{
+        ":r":parsedBody.name,
+        ":p":parsedBody.dueDate,
+        ":d":parsedBody.done
+    },
+    ExpressionAttributeNames:{
+        "#ts": "name"
+    },
+    ReturnValues:"UPDATED_NEW"
+  }).promise()
 
-  const url = getUploadUrl(todoId)
-
+  // TODO: Remove a TODO item by id
   return {
-    statusCode: 201,
+    statusCode: 200,
     headers: {
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-      uploadUrl: url
+      
     })
   }
-}
-
-function getUploadUrl(todoId: string) {
-  return s3.getSignedUrl('putObject', {
-    Bucket: bucketName,
-    Key: todoId,
-    Expires: parseInt(urlExpiration)
-  })
 }
 
 async function todoExists(todoId: string) {

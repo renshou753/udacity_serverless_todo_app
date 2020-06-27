@@ -12,14 +12,14 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   const parsedBody = JSON.parse(event.body)
 
-  const newItem = {
+  const item = {
     todoId: itemId,
     ...parsedBody
   }
 
   await docClient.put({
     TableName: todosTable,
-    Item: newItem
+    Item: item
   }).promise()
 
   return {
@@ -28,7 +28,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-      newItem
+      item
     })
   }
 }
