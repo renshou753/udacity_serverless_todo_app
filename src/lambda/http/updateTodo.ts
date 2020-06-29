@@ -1,14 +1,19 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { getUserId } from '../util'
+import { createLogger } from '../../utils/logger'
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 
+const logger = createLogger('Todo')
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todosTable = process.env.TODOS_TABLE
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Processing event: ', event)
+  logger.info("processing event ", event)
+  const userId = getUserId(event)
   const todoId = event.pathParameters.todoId
-  const validTodoId = await todoExists(todoId)
+  const validTodoId = await todoExists(userId, todoId)
   
   if (!validTodoId) {
     return {
@@ -24,6 +29,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   await docClient.update({
     TableName: todosTable,
     Key:{
+        userId: userId,
         todoId: todoId
     },
     UpdateExpression: 'set #ts = :r, dueDate=:p, done=:d',
@@ -50,11 +56,12 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 }
 
-async function todoExists(todoId: string) {
+async function todoExists(userId: string, todoId: string) {
   const result = await docClient
     .get({
       TableName: todosTable,
       Key: {
+        userId: userId,
         todoId: todoId
       }
     })

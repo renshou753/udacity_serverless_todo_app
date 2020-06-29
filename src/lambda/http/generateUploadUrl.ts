@@ -1,4 +1,6 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { getUserId } from '../util'
+import { createLogger } from '../../utils/logger'
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 
@@ -6,6 +8,7 @@ const s3 = new AWS.S3({
   signatureVersion: 'v4'
 })
 
+const logger = createLogger('Todo')
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todosTable = process.env.TODOS_TABLE
 const bucketName = process.env.IMAGES_S3_BUCKET
@@ -13,9 +16,11 @@ const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Caller event', event)
+  logger.info("processing event ", event)
+  const userId = getUserId(event)
 
   const todoId = event.pathParameters.todoId
-  const validTodoId = await todoExists(todoId)
+  const validTodoId = await todoExists(userId, todoId)
   
   if (!validTodoId) {
     return {
@@ -47,11 +52,12 @@ function getUploadUrl(todoId: string) {
   })
 }
 
-async function todoExists(todoId: string) {
+async function todoExists(userId: string, todoId: string) {
   const result = await docClient
     .get({
       TableName: todosTable,
       Key: {
+        userId: userId,
         todoId: todoId
       }
     })

@@ -20,10 +20,8 @@
     }
   },
   "required": [
-    "createdAt",
     "name",
-    "dueDate",
-    "done"
+    "dueDate"
   ],
   "additionalProperties": false
 }

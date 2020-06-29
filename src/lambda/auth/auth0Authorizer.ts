@@ -1,10 +1,12 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 
-import { verify } from 'jsonwebtoken'
+
 import { JwtPayload } from '../../auth/JwtPayload'
+import { verify } from 'jsonwebtoken'
 
 const auth0Secret = process.env.AUTH_0_SECRET
+
 
 export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAuthorizerResult> => {
   try {
