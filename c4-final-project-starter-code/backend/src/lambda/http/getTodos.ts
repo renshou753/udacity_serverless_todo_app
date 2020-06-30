@@ -13,10 +13,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   console.log('Processing event: ', event)
   logger.info("processing event ", event)
 
-  // const result = await docClient.scan({
-  //   TableName: todosTable
-  // }).promise()
-  // const items = result.Items
   
   const items = await getTodosPerUser(userId)
 

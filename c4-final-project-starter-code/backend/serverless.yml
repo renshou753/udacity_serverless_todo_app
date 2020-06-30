@@ -53,7 +53,7 @@ custom:
   documentation:
     api:
       info:
-        version: v1.0.0
+        version: v1.0.1
         title: Todo API
         description: Serverless application for simple todo app
     models:
