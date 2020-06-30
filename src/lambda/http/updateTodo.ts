@@ -1,5 +1,6 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { getUserId } from '../util'
+import { todoExists } from '../../logicLayer/todo'
 import { createLogger } from '../../utils/logger'
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
@@ -56,17 +57,3 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 }
 
-async function todoExists(userId: string, todoId: string) {
-  const result = await docClient
-    .get({
-      TableName: todosTable,
-      Key: {
-        userId: userId,
-        todoId: todoId
-      }
-    })
-    .promise()
-
-  console.log('Get todo: ', result)
-  return !!result.Item
-}
