@@ -16,6 +16,7 @@ const todosTable = process.env.TODOS_TABLE
 const data = new Data()
 
 export async function getTodosPerUser(userId: string): Promise<TodoItem[]> {
+
   return await data.getTodos(userId)
 }
 
